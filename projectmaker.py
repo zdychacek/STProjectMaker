@@ -33,6 +33,10 @@ class ProjectMakerCommand(sublime_plugin.WindowCommand):
         self.non_parsed_files = settings.get("non_parsed_files")
         self.existing_names = []
         self.plugin_path = os.path.join(sublime.packages_path(), "STProjectMaker")
+
+        # excluded tokens which won't be replaced
+        self.excluded_tokens = settings.get("excluded_tokens")
+
         if not templates_path_setting:
             templates_path = os.path.expanduser("~/STProjectMakerTemplates")
             if os.path.exists(templates_path):
@@ -143,6 +147,7 @@ class ProjectMakerCommand(sublime_plugin.WindowCommand):
             file_path = os.path.join(path, file_name)
             self.tokenized_titles.append(file_path)
             token = file_name[1:dot_index-1]
+
             if not token in self.tokens:
                 self.tokens.append(token)
 
@@ -183,7 +188,8 @@ class ProjectMakerCommand(sublime_plugin.WindowCommand):
             self.tokenized_files.append(file_path)
         for match in matches:
             token = match[2:-1]
-            if not token in self.tokens:
+
+            if not token in self.tokens and not token in self.excluded_tokens:
                 self.tokens.append(token)
 
     def get_token_values(self):
@@ -235,7 +241,7 @@ class ProjectMakerCommand(sublime_plugin.WindowCommand):
         template = self.open_file(file_path)
         if template is None:
             return
-            
+
         for token, value in self.token_values:
             r = re.compile(r"\${" + token + "}")
             template = r.sub(value, template)
